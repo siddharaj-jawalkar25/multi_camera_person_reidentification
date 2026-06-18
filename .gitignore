@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+runs/
+outputs/
+
+*.mp4
+*.pt
+
+# Large datasets
+View_001/
+View_005/
+
+# Optional generated files
+# calibration/homography_matrix.npy
