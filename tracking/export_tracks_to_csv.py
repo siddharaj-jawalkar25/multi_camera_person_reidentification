@@ -69,8 +69,8 @@ def main():
     parser.add_argument("--video", required=True, help="Path to cam1.mp4 / cam2.mp4")
     parser.add_argument("--view", required=True,
                          help="View label to write into the CSV, e.g. View_001")
-    parser.add_argument("--weights", default="models/yolov8n.pt",
-                         help="YOLOv8 weights file (default: models/yolov8n.pt, downloads if missing)")
+    parser.add_argument("--weights", default="yolov8n.pt",
+                         help="YOLOv8 weights file (default: yolov8n.pt, downloads if missing)")
     parser.add_argument("--tracker", default="bytetrack.yaml",
                          help="Tracker config, default uses Ultralytics' built-in ByteTrack")
     parser.add_argument("--conf", type=float, default=0.3,

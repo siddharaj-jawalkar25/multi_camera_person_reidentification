@@ -1,16 +1,13 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
 
-runs/
-outputs/
 
-*.mp4
-*.pt
+# Generated crops and visualizations
+data/crops/
+data/annotated/
 
-# Large datasets
-View_001/
-View_005/
-
-# Optional generated files
-# calibration/homography_matrix.npy
+# OS files
+.DS_Store
+Thumbs.db
