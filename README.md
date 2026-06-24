@@ -486,7 +486,7 @@ Global IDs flickering in the output video and Global IDs switching assignments i
 
 ## Acknowledgements
 
-Built as part of a Data Science internship POC at NeoSoft. Dataset provided by the Computer Vision Group, University of Reading (PETS2009). Team collaboration with Jay (ReID module validation) and Koustabh and Sruthik (parallel POC workstreams).
+Built as part of a Data Science internship POC at NeoSoft. Dataset provided by the Computer Vision Group, University of Reading (PETS2009). Team collaboration with Jay Patil (ReID module validation) and Siddharaj Jawalkar( as mentor).
 
 ---
 
