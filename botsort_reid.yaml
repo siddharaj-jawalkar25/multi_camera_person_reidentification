@@ -1,0 +1,20 @@
+# Custom BoT-SORT config with ReID enabled.
+# Base values from Ultralytics' default botsort.yaml, plus with_reid: True
+# so the tracker uses appearance features (not just motion/IoU) to keep the
+# same local ID on a person through occlusions and crossings.
+
+tracker_type: botsort
+track_high_thresh: 0.25    # first-pass association confidence threshold
+track_low_thresh: 0.1      # second-pass association confidence threshold
+new_track_thresh: 0.4      # confidence needed to spawn a brand-new track
+track_buffer: 120           # frames to keep a lost track alive before dropping it
+match_thresh: 0.8          # IoU/appearance matching threshold
+fuse_score: True           # fuse detection confidence into the matching cost
+gmc_method: sparseOptFlow  # camera-motion compensation method
+
+# --- ReID settings (this is the important part) ---
+with_reid: True
+model: auto                # uses the YOLO detector's own features — minimal overhead,
+                            # no separate ReID model load needed just for tracking
+proximity_thresh: 0.5      # spatial gate before appearance is even checked
+appearance_thresh: 0.45    # appearance similarity threshold for re-association

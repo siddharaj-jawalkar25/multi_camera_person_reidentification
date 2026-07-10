@@ -1,0 +1,12 @@
+# Custom ByteTrack config — same as Ultralytics' default except track_buffer
+# is extended so the tracker itself holds onto a lost track longer before
+# giving up and assigning a brand new ID on reappearance. This reduces how
+# often the same-camera re-link safety net in the script even needs to fire.
+
+tracker_type: bytetrack
+track_high_thresh: 0.25    # first-pass association confidence threshold
+track_low_thresh: 0.1      # second-pass association confidence threshold
+new_track_thresh: 0.25     # confidence needed to spawn a brand-new track
+track_buffer: 90           # frames to keep a lost track alive (was 30 by default) — ~3-4s at 25fps
+match_thresh: 0.8          # IoU matching threshold
+fuse_score: True           # fuse detection confidence into the matching cost

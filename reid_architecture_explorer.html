@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Camera Re-ID Architecture Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .cost-matrix-cell {
+            transition: all 0.2s ease;
+        }
+
+        .active-tab {
+            border-left: 4px solid #f59e0b;
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .step-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-full md:w-64 bg-white border-r border-slate-200 p-6 space-y-8 sticky top-0 h-auto md:h-screen">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 leading-tight">Re-ID System<br><span class="text-amber-600 underline decoration-amber-200">Architecture</span></h1>
+                <p class="text-xs text-slate-500 mt-2 font-medium uppercase tracking-widest">v2.0 Documentation</p>
+            </div>
+
+            <div class="space-y-1">
+                <button onclick="switchTab('overview')" id="nav-overview" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all active-tab">
+                    System Overview
+                </button>
+                <button onclick="switchTab('processing')" id="nav-processing" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50">
+                    Frame Processing
+                </button>
+                <button onclick="switchTab('features')" id="nav-features" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50">
+                    Feature Fusion
+                </button>
+                <button onclick="switchTab('identity')" id="nav-identity" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50">
+                    Global ID Engine
+                </button>
+            </div>
+
+            <div class="pt-10 border-t border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-2">Core Components</p>
+                <ul class="text-xs space-y-2 text-slate-600">
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span> YOLOv8 Detector
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span> OSNet Embedder
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> ByteTrack
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 md:p-12 overflow-y-auto">
+            
+            <!-- Section: Overview -->
+            <section id="section-overview" class="tab-content max-w-5xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Pipeline High-Level Flow</h2>
+                    <p class="text-slate-600 leading-relaxed max-w-3xl">
+                        This section explains the end-to-end journey of a video frame in <span class="code-font text-sm bg-slate-100 px-1">main.py</span>. 
+                        The system transforms raw pixel data from multiple asynchronous streams into a unified identity graph using a 
+                        "Tracking-by-Detection" paradigm optimized for cross-camera consistency.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center font-bold mb-4">1</div>
+                        <h3 class="font-bold mb-2">Per-Camera Isolation</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            Each stream utilizes its own <span class="code-font italic">YOLO</span> and <span class="code-font italic">ByteTrack</span> instance. This prevents coordinate-frame pollution and ensures stable Kalman filter predictions.
+                        </p>
+                    </div>
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold mb-4">2</div>
+                        <h3 class="font-bold mb-2">Quality Gating</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            Raw detections are filtered via Laplacian variance (blur) and aspect ratio checks. Only high-fidelity crops populate the identity gallery.
+                        </p>
+                    </div>
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-700 rounded-lg flex items-center justify-center font-bold mb-4">3</div>
+                        <h3 class="font-bold mb-2">Deep Feature Extraction</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            OSNet generates 512-dim embeddings. Simultaneously, HSV histograms capture clothing color signatures as a pose-invariant fallback.
+                        </p>
+                    </div>
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center font-bold mb-4">4</div>
+                        <h3 class="font-bold mb-2">Intra-Camera Linking</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            New tracks are compared against recently lost tracks in the <span class="italic">same</span> camera to handle occlusion-induced ID jumps.
+                        </p>
+                    </div>
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center font-bold mb-4">5</div>
+                        <h3 class="font-bold mb-2">Cross-Camera Association</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            Every <span class="code-font">MATCH_INTERVAL</span>, the Hungarian Algorithm solves the global assignment problem across all camera pairs.
+                        </p>
+                    </div>
+                    <div class="step-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-transform">
+                        <div class="w-10 h-10 bg-rose-100 text-rose-700 rounded-lg flex items-center justify-center font-bold mb-4">6</div>
+                        <h3 class="font-bold mb-2">Global Fusion</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            Union-Find (DSU) manages the global identity graph, freezing visual labels for display stability even if logical merges happen later.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Processing -->
+            <section id="section-processing" class="tab-content hidden max-w-5xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">The Processing Engine</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Data integrity starts at the crop level. <span class="code-font">main.py</span> implements rigorous quality gates to ensure the Re-ID gallery isn't polluted by motion blur, partial detections, or poor lighting.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div class="bg-slate-900 text-slate-300 p-8 rounded-2xl shadow-xl">
+                            <h4 class="text-amber-400 font-bold mb-4 flex items-center">
+                                <span class="mr-2">⚡</span> Pre-processing Logic
+                            </h4>
+                            <ul class="space-y-4 text-sm">
+                                <li class="flex space-x-3">
+                                    <span class="text-amber-500 font-mono">1.</span>
+                                    <span><strong>CLAHE Normalization:</strong> Applied in LAB space to the L-channel. This compensates for exposure differences between indoor and window-adjacent cameras.</span>
+                                </li>
+                                <li class="flex space-x-3">
+                                    <span class="text-amber-500 font-mono">2.</span>
+                                    <span><strong>Blur Gating:</strong> Calculated via <span class="italic">Laplacian Variance</span>. Threshold set at 45.0. Lower values signify motion blur, which smears pixel gradients and destroys ReID signal.</span>
+                                </li>
+                                <li class="flex space-x-3">
+                                    <span class="text-amber-500 font-mono">3.</span>
+                                    <span><strong>Geometric Filtering:</strong> Rejects crops with area &lt; 1500px or aspect ratios outside [1.2, 4.5] to filter out partial bodies or background noise.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="flex flex-col justify-center space-y-6">
+                            <div class="p-6 bg-white border border-slate-200 rounded-xl">
+                                <h5 class="font-bold text-slate-800 mb-2">Detection Filtering Logic</h5>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span>Min Area (1500px)</span>
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded font-bold uppercase">Pass</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-green-500 h-full w-[85%]"></div>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span>Blur Score (&gt;45.0)</span>
+                                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded font-bold uppercase">Fail</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-red-500 h-full w-[30%]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-400 italic text-center">
+                                Figures simulate internal gating thresholds described in the source code.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Features -->
+            <section id="section-features" class="tab-content hidden max-w-5xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Feature Fusion Strategy</h2>
+                    <p class="text-slate-600 leading-relaxed mb-10">
+                        The "Identity Signature" is a weighted ensemble of two distinct biometric signals. This dual-signal approach ensures robustness against viewpoint changes where deep features might fail but color consistency remains high.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                        <div class="chart-container">
+                            <canvas id="fusionChart"></canvas>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-amber-500 pl-6">
+                                <h4 class="font-bold text-lg">Deep Embedding (75%)</h4>
+                                <p class="text-sm text-slate-500">
+                                    Extracted via <span class="code-font">OSNet_x1_0</span>. This 512-dimension vector captures architectural body features and clothing patterns. L2-normalized for Cosine Similarity.
+                                </p>
+                            </div>
+                            <div class="border-l-4 border-slate-400 pl-6">
+                                <h4 class="font-bold text-lg">HSV Histogram (25%)</h4>
+                                <p class="text-sm text-slate-500">
+                                    A 2D (H, S) histogram of the CLAHE-normalized crop. While OSNet handles "what" the clothing looks like, the histogram handles the "distribution of colors," providing stability in poor lighting.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Identity -->
+            <section id="section-identity" class="tab-content hidden max-w-5xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Global Association Engine</h2>
+                    <p class="text-slate-600 leading-relaxed mb-8">
+                        The matching logic is split into two phases: Intra-camera re-linking for continuity and Inter-camera matching for global identity.
+                    </p>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl p-8 mb-10">
+                        <h4 class="font-bold text-xl mb-6 flex items-center">
+                            Interactive Cost Matrix (Hungarian Algorithm)
+                        </h4>
+                        <p class="text-sm text-slate-500 mb-6">
+                            Below is a simulation of the <span class="code-font">cross_camera_match</span> logic. Each cell represents the <span class="italic">Fused Cost</span> between a track in Cam A and a track in Cam B. The Hungarian Algorithm selects the 1-to-1 mapping that minimizes the total global cost.
+                        </p>
+                        
+                        <div class="overflow-x-auto">
+                            <div class="grid grid-cols-5 gap-2 min-w-[500px]" id="cost-matrix">
+                                <!-- Generated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex flex-col md:flex-row gap-6 justify-center">
+                            <div class="flex items-center">
+                                <span class="w-4 h-4 bg-emerald-500 rounded mr-2"></span>
+                                <span class="text-xs font-bold text-slate-600">Optimal Match (Accepted)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 h-4 bg-slate-200 border border-slate-300 rounded mr-2"></span>
+                                <span class="text-xs font-bold text-slate-600">Candidate Match</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="p-6 bg-slate-50 rounded-xl">
+                            <h5 class="font-bold text-slate-900 mb-3">Union-Find Logic</h5>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                The <span class="code-font">UnionFind</span> class manages identity clusters. It uses <strong>Path Compression</strong> for O(α(n)) efficiency. Crucially, visual stability is maintained via the <span class="italic">Frozen Display ID</span>: once an ID is shown to the user, it is locked even if the back-end graph merges it into a larger cluster later.
+                            </p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-xl">
+                            <h5 class="font-bold text-slate-900 mb-3">Track Gallery (Top-K)</h5>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Instead of a moving average, <span class="code-font">TrackGallery</span> stores the 5 highest-quality crops (by score). The representative embedding is the centroid of these top crops, ensuring one "bad frame" (like a person walking away) doesn't pollute the profile.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer Stats -->
+    <div class="fixed bottom-0 right-0 p-4 hidden lg:block">
+        <div class="bg-white border border-slate-200 shadow-lg rounded-full px-6 py-2 flex space-x-6">
+            <div class="text-[10px]">
+                <p class="text-slate-400 font-bold uppercase tracking-widest">Match Threshold</p>
+                <p class="text-slate-800 font-mono">0.35 (Enforced)</p>
+            </div>
+            <div class="text-[10px]">
+                <p class="text-slate-400 font-bold uppercase tracking-widest">Sync Interval</p>
+                <p class="text-slate-800 font-mono">15 Frames</p>
+            </div>
+            <div class="text-[10px]">
+                <p class="text-slate-400 font-bold uppercase tracking-widest">ReID Weights</p>
+                <p class="text-slate-800 font-mono">OSNet MSMT17</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Management
+        function switchTab(tabId) {
+            // Update Tab Content
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+
+            // Update Nav Styling
+            document.querySelectorAll('nav button').forEach(el => {
+                el.classList.remove('active-tab', 'text-amber-600', 'bg-amber-50');
+                el.classList.add('text-slate-600');
+            });
+            const activeNav = document.getElementById('nav-' + tabId);
+            activeNav.classList.add('active-tab');
+            activeNav.classList.remove('text-slate-600');
+        }
+
+        // Initialize Fusion Chart
+        const ctx = document.getElementById('fusionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['OSNet Embedding', 'HSV Histogram'],
+                datasets: [{
+                    data: [75, 25],
+                    backgroundColor: ['#f59e0b', '#94a3b8'],
+                    hoverOffset: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'Inter', weight: '600', size: 12 },
+                            padding: 20
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Initialize Cost Matrix Simulation
+        const matrixEl = document.getElementById('cost-matrix');
+        const rows = ['Cam A: ID 1', 'Cam A: ID 2', 'Cam A: ID 3', 'Cam A: ID 4'];
+        const cols = ['', 'Cam B: ID 5', 'Cam B: ID 6', 'Cam B: ID 7', 'Cam B: ID 8'];
+
+        // Add Header Row
+        cols.forEach(c => {
+            const el = document.createElement('div');
+            el.className = 'text-[10px] font-bold text-slate-400 uppercase p-2 flex items-center justify-center';
+            el.innerText = c;
+            matrixEl.appendChild(el);
+        });
+
+        // Generate Data with simulated optimal path
+        const optimalMatches = [[0,1], [1,2], [3,4]]; // Row index to Column index mapping
+
+        for (let r = 0; r < 4; r++) {
+            // Row Label
+            const label = document.createElement('div');
+            label.className = 'text-[10px] font-bold text-slate-400 p-2 flex items-center bg-slate-50';
+            label.innerText = rows[r];
+            matrixEl.appendChild(label);
+
+            for (let c = 1; c < 5; c++) {
+                const cell = document.createElement('div');
+                const isMatch = optimalMatches.some(m => m[0] === r && m[1] === c);
+                const cost = isMatch ? (0.1 + Math.random() * 0.2).toFixed(2) : (0.5 + Math.random() * 0.4).toFixed(2);
+                
+                cell.className = `p-4 flex flex-col items-center justify-center border rounded-lg cost-matrix-cell ${isMatch ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-100 text-slate-400'}`;
+                cell.innerHTML = `
+                    <span class="text-xs font-mono font-bold">${cost}</span>
+                    <span class="text-[8px] uppercase tracking-tighter mt-1 opacity-50">${cost < 0.35 ? 'Valid' : 'Invalid'}</span>
+                `;
+                matrixEl.appendChild(cell);
+            }
+        }
+    </script>
+</body>
+</html>
